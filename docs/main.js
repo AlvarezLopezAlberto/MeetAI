@@ -2,28 +2,24 @@
 
 import { msalConfig, loginRequest } from "./authConfig.js";
 
-// MSAL y Graph Client se exponen en el global window
-const msal = window.msal;                     // MSAL Browser expone window.msal
-const microsoftGraph = window.MicrosoftGraph; // Graph Client expone window.MicrosoftGraph
+// MSAL y Graph Client globales (UMD que cargaste en index.html)
+const msal = window.msal;
+const microsoftGraph = window.MicrosoftGraph;
 
 let msalInstance;
 let graphClient;
 let account;
 let mediaRecorder, audioChunks = [];
 
-// Referencias a elementos del DOM
 const loginBtn   = document.getElementById("loginBtn");
 const startBtn   = document.getElementById("startBtn");
 const stopBtn    = document.getElementById("stopBtn");
 const statusEl   = document.getElementById("status");
 
-// 1) Iniciar sesión con MSAL y crear graphClient
 async function signIn() {
   try {
     if (!msalInstance) {
-      // Crear la instancia
       msalInstance = new msal.PublicClientApplication(msalConfig);
-      // ¡Obligatorio! Llamar a initialize() antes de usar loginPopup()
       await msalInstance.initialize();
     }
 
@@ -55,16 +51,17 @@ async function signIn() {
   }
 }
 
-// 2) Verificar/crear carpeta “AudioParaTranscribir” en OneDrive
 async function ensureFolderExists(folderName) {
   try {
-    const response = await graphClient
-      .api(`/me/drive/root/children?$filter=name eq '${folderName}' and folder ne null`)
+    // Intentamos GET /me/drive/root:/<folderName>
+    const folder = await graphClient
+      .api(`/me/drive/root:/${folderName}`)
       .get();
 
-    if (response.value && response.value.length > 0) {
-      return response.value[0].id;
-    } else {
+    return folder.id;
+  } catch (err) {
+    if (err.statusCode === 404) {
+      // Si no existe (404), creamos en children
       const newFolder = await graphClient
         .api(`/me/drive/root/children`)
         .post({
@@ -74,13 +71,12 @@ async function ensureFolderExists(folderName) {
         });
       return newFolder.id;
     }
-  } catch (error) {
-    console.error("Error en ensureFolderExists:", error);
-    throw error;
+    // Si es otro error, mostrarlo y relanzar
+    console.error("ERROR en ensureFolderExists (no 404):", err);
+    throw err;
   }
 }
 
-// 3) Subir Blob de audio a OneDrive
 async function uploadAudioBlob(blob) {
   try {
     const folderName = "AudioParaTranscribir";
@@ -101,7 +97,6 @@ async function uploadAudioBlob(blob) {
   }
 }
 
-// 4) Manejar grabación y, al detener, subir a OneDrive
 startBtn.addEventListener("click", async () => {
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -139,7 +134,6 @@ stopBtn.addEventListener("click", () => {
   }
 });
 
-// 5) Conectar el botón “login”
 loginBtn.addEventListener("click", () => {
   signIn();
 });
