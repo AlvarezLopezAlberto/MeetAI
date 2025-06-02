@@ -8,7 +8,7 @@ const origin = window.location.origin;
 // - En local (localhost), podemos usar origin directamente
 let redirectUri;
 if (origin.includes("github.io")) {
-  redirectUri = origin + "/MeetAI";
+  redirectUri = origin + "/MeetAI/";
 } else {
   // en localhost:3000
   redirectUri = origin;
