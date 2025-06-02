@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Reunión Recorder</title>
+</head>
+<body>
+  <h1>Reunión Recorder</h1>
+
+  <!-- Botones de Control -->
+  <button id="loginBtn">🔑 Iniciar sesión</button>
+  <button id="startBtn" disabled>▶️ Empezar a Grabar</button>
+  <button id="stopBtn" disabled>⏹ Detener y Subir</button>
+  <p id="status">Estado: Conectar</p>
+
+  <!-- 1) MSAL Browser (Local, desde docs/lib/) -->
+  <script src="./lib/msal-browser.min.js"></script>
+  
+  <!-- 2) Microsoft Graph JavaScript SDK (Local, desde docs/lib/) -->
+  <script src="./lib/graph-js-sdk-web.js"></script>
+
+  <!-- 3) Nuestro authConfig.js (debe estar en docs/) -->
+  <script type="module" src="./authConfig.js"></script>
+
+  <!-- 4) Nuestro main.js (en docs/) -->
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

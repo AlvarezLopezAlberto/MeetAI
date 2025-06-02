@@ -4,7 +4,8 @@
   "description": "Este repositorio contendrá la webapp de grabación y transcripción de reuniones.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "lite-server --baseDir=docs"
   },
   "repository": {
     "type": "git",
@@ -16,5 +17,14 @@
   "bugs": {
     "url": "https://github.com/AlvarezLopezAlberto/MeetAI/issues"
   },
-  "homepage": "https://github.com/AlvarezLopezAlberto/MeetAI#readme"
+  "homepage": "https://github.com/AlvarezLopezAlberto/MeetAI#readme",
+  "dependencies": {
+    "@azure/msal-browser": "^4.13.0",
+    "@microsoft/microsoft-graph-client": "^3.0.7",
+    "isomorphic-fetch": "^3.0.0"
+  },
+  "devDependencies": {
+    "http-server": "^14.1.1",
+    "lite-server": "^2.6.1"
+  }
 }
