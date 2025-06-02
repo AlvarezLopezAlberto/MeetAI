@@ -1,31 +1,37 @@
-// public/main.js
+// docs/main.js
 
-import { PublicClientApplication } from "https://cdn.jsdelivr.net/npm/@azure/msal-browser/dist/msal-browser.esm.js";
-import { Client } from "https://cdn.jsdelivr.net/npm/@microsoft/microsoft-graph-client/lib/graph-js-sdk-web.esm.js";
-import { msalConfig, loginRequest } from "../authConfig.js";
+import { msalConfig, loginRequest } from "./authConfig.js";
 
-// Variables globales
-let msalInstance = new PublicClientApplication(msalConfig);
+// MSAL y Graph Client se exponen en el global window
+const msal = window.msal;                     // MSAL Browser expone window.msal
+const microsoftGraph = window.MicrosoftGraph; // Graph Client expone window.MicrosoftGraph
+
+let msalInstance;
 let graphClient;
 let account;
 let mediaRecorder, audioChunks = [];
 
-// Elementos del DOM
+// Referencias a elementos del DOM
 const loginBtn   = document.getElementById("loginBtn");
 const startBtn   = document.getElementById("startBtn");
 const stopBtn    = document.getElementById("stopBtn");
 const statusEl   = document.getElementById("status");
 
-// 1) Función para iniciar sesión y configurar Graph Client
+// 1) Iniciar sesión con MSAL y crear graphClient
 async function signIn() {
   try {
-    // Inicia flujo interactivo (popup)
+    if (!msalInstance) {
+      // Crear la instancia
+      msalInstance = new msal.PublicClientApplication(msalConfig);
+      // ¡Obligatorio! Llamar a initialize() antes de usar loginPopup()
+      await msalInstance.initialize();
+    }
+
     const loginResponse = await msalInstance.loginPopup(loginRequest);
     account = loginResponse.account;
     statusEl.innerText = `Usuario: ${account.username}`;
 
-    // Construir Graph Client usando el token obtenido
-    graphClient = Client.init({
+    graphClient = microsoftGraph.Client.init({
       authProvider: async (done) => {
         try {
           const silentResult = await msalInstance.acquireTokenSilent({
@@ -33,15 +39,13 @@ async function signIn() {
             account: account
           });
           done(null, silentResult.accessToken);
-        } catch (error) {
-          // Si falla el silent, hacemos popup de nuevo
+        } catch (silentError) {
           const tokenResponse = await msalInstance.acquireTokenPopup(loginRequest);
           done(null, tokenResponse.accessToken);
         }
       }
     });
 
-    // Habilitar botones ahora que estamos autenticados
     loginBtn.disabled = true;
     startBtn.disabled = false;
     statusEl.innerText = `Conectado como: ${account.username}`;
@@ -51,20 +55,16 @@ async function signIn() {
   }
 }
 
-// 2) Función para asegurar que exista la carpeta “AudioParaTranscribir” en OneDrive
+// 2) Verificar/crear carpeta “AudioParaTranscribir” en OneDrive
 async function ensureFolderExists(folderName) {
   try {
-    // Intentar buscar la carpeta en la raíz de OneDrive del usuario
-    const folder = await graphClient
-      .api(`/me/drive/root/children`)
-      .filter(`name eq '${folderName}' and folder ne null`)
+    const response = await graphClient
+      .api(`/me/drive/root/children?$filter=name eq '${folderName}' and folder ne null`)
       .get();
 
-    if (folder.value && folder.value.length > 0) {
-      // Si ya existe, devolvemos su id
-      return folder.value[0].id;
+    if (response.value && response.value.length > 0) {
+      return response.value[0].id;
     } else {
-      // Si no existe, la creamos
       const newFolder = await graphClient
         .api(`/me/drive/root/children`)
         .post({
@@ -80,25 +80,20 @@ async function ensureFolderExists(folderName) {
   }
 }
 
-// 3) Función para subir un Blob de audio a OneDrive en la carpeta “AudioParaTranscribir”
+// 3) Subir Blob de audio a OneDrive
 async function uploadAudioBlob(blob) {
   try {
     const folderName = "AudioParaTranscribir";
-    // 3.1) Asegurarnos de que la carpeta existe, y obtener su ID
     const folderId = await ensureFolderExists(folderName);
 
-    // 3.2) Preparar el nombre de archivo con timestamp
     const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
     const fileName = `meeting_${timestamp}.wav`;
 
-    // 3.3) Llamar a Graph para hacer upload sencillo (puede manejar hasta ~4 MB en una sola llamada)
-    //       Si el blob es mayor, deberíamos usar el “upload session”, pero en la mayoría de grabaciones
-    //       de audio corto no supera 4 MB. Ajusta según necesites.
-    const uploadResult = await graphClient
+    await graphClient
       .api(`/me/drive/items/${folderId}:/${fileName}:/content`)
       .put(blob);
 
-    console.log("Archivo subido con éxito:", uploadResult);
+    console.log("Subido a OneDrive:", fileName);
     statusEl.innerText = `Subido: ${fileName}`;
   } catch (error) {
     console.error("Error en uploadAudioBlob:", error);
@@ -106,7 +101,7 @@ async function uploadAudioBlob(blob) {
   }
 }
 
-// 4) Lógica de grabación + llamada a uploadAudioBlob()
+// 4) Manejar grabación y, al detener, subir a OneDrive
 startBtn.addEventListener("click", async () => {
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
