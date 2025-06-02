@@ -7,9 +7,24 @@
 </head>
 <body>
   <h1>Reunión Recorder</h1>
-  <button id="startBtn">▶️ Empezar a Grabar</button>
-  <button id="stopBtn" disabled>⏹ Detener</button>
-  <p id="status">Estado: Detenido</p>
-  <script src="main.js"></script>
+
+  <!-- Botones de grabar y subir -->
+  <button id="loginBtn">🔑 Iniciar sesión</button>
+  <button id="startBtn" disabled>▶️ Empezar a Grabar</button>
+  <button id="stopBtn" disabled>⏹ Detener y Subir</button>
+  <p id="status">Estado: Conectarse</p>
+
+  <!-- Carga de librerías -->
+  <!-- MSAL -->
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@azure/msal-browser/dist/msal-browser.js"></script>
+  <!-- Graph Client -->
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@microsoft/microsoft-graph-client/lib/graph-js-sdk-web.js"></script>
+  <!-- Isomorphic fetch -->
+  <script type="module">
+    import "https://cdn.jsdelivr.net/npm/isomorphic-fetch@3.0.0/fetch-npm-browserify.min.js";
+  </script>
+
+  <!-- Nuestro código principal -->
+  <script type="module" src="main.js"></script>
 </body>
 </html>
