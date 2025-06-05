@@ -2,19 +2,28 @@ import os
 import shutil
 import whisper
 
-# —————————— AJUSTA ESTAS RUTAS —————————— #
-# Carpeta sincronizada con OneDrive (entrada de audios)
-INPUT_FOLDER  = r"E:\OneDrive - EMERALD DIGITAL SC\AudioParaTranscribir"
-
-# Carpeta donde se guardarán los .txt
-OUTPUT_FOLDER = r"E:\OneDrive - EMERALD DIGITAL SC\MeetAI"
+# -------------------------------------------------------
+# Carpeta de entrada y salida definidas por variables de
+# entorno para evitar rutas absolutas.  MEETAI_INPUT es
+# la carpeta con los audios a transcribir y MEETAI_OUTPUT
+# la carpeta donde se guardarán los .txt resultantes.
+# -------------------------------------------------------
+INPUT_FOLDER = os.getenv("MEETAI_INPUT")
+OUTPUT_FOLDER = os.getenv("MEETAI_OUTPUT")
+if INPUT_FOLDER is None or OUTPUT_FOLDER is None:
+    raise RuntimeError(
+        "Debes definir las variables MEETAI_INPUT y MEETAI_OUTPUT"
+    )
 
 # Nombre de la subcarpeta donde moveremos los audios ya procesados
 DONE_SUBFOLDER = "transcript_done"
 # ————————————————————————————————————————————— #
 
-# Si tu ffmpeg no está en PATH global, descomenta esta línea:
-os.environ["PATH"] += os.pathsep + r"F:\ffmpeg"
+# Si ffmpeg no está en PATH global, se puede indicar mediante la variable de
+# entorno FFMPEG_PATH.  Si existe, se añade al PATH del proceso.
+ffmpeg_path = os.getenv("FFMPEG_PATH")
+if ffmpeg_path:
+    os.environ["PATH"] += os.pathsep + ffmpeg_path
 
 # Cargar modelo Whisper (ajusta a "tiny" si necesitas menos VRAM)
 model = whisper.load_model("base")

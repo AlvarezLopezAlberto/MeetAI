@@ -29,10 +29,19 @@ summarizer = pipeline(
 )
 
 # ------------------------------------------
-# 4) Rutas de carpetas (ajusta a tu OneDrive)
+# 4) Rutas de carpetas
 # ------------------------------------------
-TRANSCRIPTS_FOLDER = r"E:\OneDrive - EMERALD DIGITAL SC\MeetAI"
-DONE_FOLDER = os.path.join(TRANSCRIPTS_FOLDER, "transcripts_done")
+# Las carpetas de entrada y salida se obtienen de variables de entorno para
+# evitar rutas absolutas dependientes de la máquina local.  MEETAI_INPUT
+# apunta a la carpeta con los ficheros .txt que se enviarán a Notion y
+# MEETAI_OUTPUT indica dónde se moverán una vez procesados.  Si MEETAI_OUTPUT
+# no se define, se usará la misma ruta de entrada.
+TRANSCRIPTS_FOLDER = os.getenv("MEETAI_INPUT")
+if TRANSCRIPTS_FOLDER is None:
+    raise RuntimeError("Debes definir la variable de entorno MEETAI_INPUT")
+
+output_base = os.getenv("MEETAI_OUTPUT", TRANSCRIPTS_FOLDER)
+DONE_FOLDER = os.path.join(output_base, "transcripts_done")
 os.makedirs(DONE_FOLDER, exist_ok=True)
 
 # ------------------------------------------
