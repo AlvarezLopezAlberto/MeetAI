@@ -14,11 +14,11 @@
   <button id="stopBtn" disabled>⏹ Detener y Subir</button>
   <p id="status">Estado: Conectar</p>
 
-  <!-- 1) MSAL Browser (Local, desde docs/lib/) -->
-  <script src="./lib/msal-browser.min.js"></script>
-  
-  <!-- 2) Microsoft Graph JavaScript SDK (Local, desde docs/lib/) -->
-  <script src="./lib/graph-js-sdk-web.js"></script>
+  <!-- 1) MSAL Browser desde CDN -->
+  <script src="https://alcdn.msauth.net/browser/2.37.0/js/msal-browser.min.js"></script>
+
+  <!-- 2) Microsoft Graph JavaScript SDK desde CDN -->
+  <script src="https://unpkg.com/@microsoft/microsoft-graph-client/lib/graph-js-sdk-web.js"></script>
 
   <!-- 3) Nuestro authConfig.js (debe estar en docs/) -->
   <script type="module" src="./authConfig.js"></script>
